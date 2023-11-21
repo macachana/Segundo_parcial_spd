@@ -36,6 +36,8 @@ _______________________________________________________
 - [x] Dos leds
 si la temperatura es mayor a 60 entonces empezaran a titilar advirtiendo que hay un incendio.
 
+Estudiantes de la UTN facultad regional de avellaneda
+
 este proyecto representa la comodidad de prender y apagar con un boton un **detector de temperatura**, que muestra en  una pantalla LCD, muy util.
 _______________________________________________________
 
