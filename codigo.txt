@@ -1,0 +1,198 @@
+//incluimos las bibliotecas
+#include <Servo.h>
+#include <IRremote.h>
+#include <LiquidCrystal.h>
+
+//definimos los dos leds , el sensor de temperatura y el servo
+LiquidCrystal lcd(2,3,4,5,6,7);
+
+Servo servo_9;
+int LedNaranja = 13;
+int LedRojo = 12;
+int ReceptorIR = 11;
+int sensor = A0;
+
+//definir variables que utilizaremos mas adelante
+bool estado_boton = false;
+int pos = 0;
+int lectura;
+int temperatura;
+float voltios;
+
+//bytes para el LCD
+byte grado[8] =
+ {0b00001100,0b00010010,0b00010010,0b00001100,
+  0b00000000,0b00011110,0b00000000,0b00000000};
+
+void setup()
+{
+  //configuracion para el LCD
+  lcd.begin(16,2);
+  lcd.setCursor(0,0);
+  
+  //a penas empiece a ejecutarse el proyecta se escribira
+  //lo siguiente en la pantalla
+  lcd.print("Segundo Parcial");
+  lcd.setCursor(0,1);
+  lcd.print("M. Chanampa");
+  lcd.createChar(1,grado);
+  
+  //leds
+  pinMode(LedNaranja,OUTPUT);
+  pinMode(LedRojo,OUTPUT);
+  
+  //Control Remoto IR
+  IrReceiver.begin(ReceptorIR,DISABLE_LED_FEEDBACK);
+}
+void loop()
+{
+  if(estado_boton)
+  {
+    boton_true(sensor,LedNaranja,LedRojo,estado_boton);
+  }
+  
+  //preguntamos si hubo alguna interaccion con el control remoto
+  if (IrReceiver.decode()) 
+  {
+    //si se apreto el boton rojo entonces la variable
+    //estado_boton sera igual a su contrario
+    //asi sabemos si se apreto por de forma que se prenda 
+    //o se apreto el boton para apagar el circuito
+	if (IrReceiver.decodedIRData.decodedRawData== 0XFF00BF00)
+    { 
+      estado_boton = !estado_boton; 
+    }
+    IrReceiver.resume();
+  }
+}
+
+
+// FUNCION SI ES QUE HAY UN INCENDIO SE PRENDEN LAS LUCES //
+void activar_luces(int led_1,int led_2)
+{
+  for(int i=0;i<180;i++)
+  {
+    digitalWrite(led_1,HIGH);
+    digitalWrite(led_2,LOW);
+
+    delay(50);
+
+    digitalWrite(led_1,LOW);
+    digitalWrite(led_2,HIGH);
+
+    delay(50);
+  }
+}
+
+////////////// FUNCION SI EL BOTON ES TRUE /////////////
+void boton_true(int sensor,int led_1,int led_2,bool estado_boton)
+{
+  
+  LiquidCrystal lcd(2,3,4,5,6,7);
+  lcd.begin(16,2);
+  lectura =  analogRead(sensor);
+  voltios = map(lectura,0 ,1023 ,0 ,5000);
+  temperatura = (voltios/10)-50;
+  if (estado_boton)
+  {
+    //si la temperatura es menor a 10 entonces es invierno
+    if(temperatura <= 10)
+    {
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("INVIERNO");
+      lcd.setCursor(0,1);
+      lcd.print("TEMP ");
+      lcd.setCursor(5,1);
+      lcd.write(1);
+      lcd.setCursor(7,1);
+      lcd.print(temperatura);
+      lcd.setCursor(10,1);
+      lcd.print("C");
+      delay(100);
+    }
+    //si la temperatura se encuentra entre 11 y 20
+    //entonces es otoño
+    if(temperatura >= 11 && temperatura <= 20)
+    {
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("OTONO");
+      lcd.setCursor(0,1);
+      lcd.print("TEMP ");
+      lcd.setCursor(5,1);
+      lcd.write(1);
+      lcd.setCursor(7,1);
+      lcd.print(temperatura);
+      lcd.setCursor(10,1);
+      lcd.print("C");
+      delay(100);
+    }
+    //si la temperatrura recibida se encuentra entre 24 y 
+    //30 entonces es primavera
+    if(temperatura >= 24 && temperatura <= 30)
+    {
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("PRIMAVERA");
+      lcd.setCursor(0,1);
+      lcd.print("TEMP ");
+      lcd.setCursor(5,1);
+      lcd.write(1);
+      lcd.setCursor(7,1);
+      lcd.print(temperatura);
+      lcd.setCursor(10,1);
+      lcd.print("C");
+      delay(100);
+    }
+    //si la temperatura esta entre 31 y 60 entonces es verano
+    if(temperatura >= 31 && temperatura <= 60)
+    {
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("VERANO");
+      lcd.setCursor(0,1);
+      lcd.print("TEMP ");
+      lcd.setCursor(5,1);
+      lcd.write(1);
+      lcd.setCursor(7,1);
+      lcd.print(temperatura);
+      lcd.setCursor(10,1);
+      lcd.print("C");
+      delay(100);
+    }
+    //si la temperatura es mayor a 60 grados entonces
+    //va a avisar que hay un incendio
+    //y activara el servo y las luces
+    if(temperatura > 60)
+    {
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("INCENDIO!!!");
+      lcd.setCursor(0,1);
+      lcd.print("TEMP ");
+      lcd.setCursor(5,1);
+      lcd.write(1);
+      lcd.setCursor(7,1);
+      lcd.print(temperatura);
+      lcd.setCursor(10,1);
+      lcd.print("C");
+      servo_9.attach(9);
+      
+      //el servo simulara el timbre que constantemente está en
+      //movimiento
+      activar_luces(led_1,led_2);
+      for(pos =0;pos<=180;pos+=1)
+      {
+        servo_9.write(pos);
+        delay(5);
+      }
+      for(pos = 180;pos>=0;pos-=1)
+      {
+        servo_9.write(pos);
+        delay(5);
+      }    
+    }    
+  }
+
+}
